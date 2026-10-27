@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Vulnerable — Reflected XSS Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="mode-vuln">
+
+  <nav class="navbar">
+    <a href="/" class="nav-brand">
+      <span class="brand-icon">&#9741;</span>
+      <span>XSS Lab</span>
+    </a>
+    <div class="nav-links">
+      <a href="/"           class="nav-link">Home</a>
+      <a href="/vulnerable" class="nav-link active"><span class="dot dot-red"></span>Vulnerable</a>
+      <a href="/safe"        class="nav-link"><span class="dot dot-green"></span>Mitigated</a>
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- Banner -->
+    <div class="page-banner banner-vuln">
+      <span class="status-pill pill-red">&#9888;&#65039; VULNERABLE MODE</span>
+      <p>User input is placed <strong>directly</strong> into the HTML response &mdash; no encoding at all.</p>
+    </div>
+
+    <!-- Search -->
+    <section class="card glass">
+      <h2>&#128269; Search</h2>
+      <form action="/vulnerable" method="GET" class="search-form">
+        <input id="q" type="text" name="q"
+               placeholder="Type a query or paste an XSS payload…"
+               autocomplete="off" spellcheck="false">
+        <button type="submit">Search</button>
+      </form>
+      {{RESULT}}
+    </section>
+
+    <!-- Payload gallery -->
+    <section class="card glass">
+      <h2>&#129514; Payload Gallery <span class="hint">click to auto-fill</span></h2>
+      <div class="payload-grid">
+
+        <button class="pcard" onclick="fill(this)" type="button">
+          <strong>Basic Alert</strong>
+          <code>&lt;script&gt;alert('XSS')&lt;/script&gt;</code>
+          <small>Classic injection &mdash; pops an alert box.</small>
+        </button>
+
+        <button class="pcard" onclick="fill(this)" type="button">
+          <strong>Cookie Theft</strong>
+          <code>&lt;script&gt;alert(document.cookie)&lt;/script&gt;</code>
+          <small>Reads the session cookie and displays it.</small>
+        </button>
+
+        <button class="pcard" onclick="fill(this)" type="button">
+          <strong>Image onerror</strong>
+          <code>&lt;img src=x onerror=alert('XSS')&gt;</code>
+          <small>Broken image triggers the onerror handler.</small>
+        </button>
+
+        <button class="pcard" onclick="fill(this)" type="button">
+          <strong>SVG onload</strong>
+          <code>&lt;svg onload=alert('XSS')&gt;</code>
+          <small>Inline SVG fires script on load.</small>
+        </button>
+
+        <button class="pcard" onclick="fill(this)" type="button">
+          <strong>Body Replacement</strong>
+          <code>&lt;script&gt;document.body.innerHTML='&lt;h1 style=color:red&gt;HACKED&lt;/h1&gt;'&lt;/script&gt;</code>
+          <small>Overwrites the entire page &mdash; full DOM control.</small>
+        </button>
+
+        <button class="pcard" onclick="fill(this)" type="button">
+          <strong>HTML Injection</strong>
+          <code>&lt;h1 style="color:red;font-size:50px"&gt;&#9888; DEFACED &#9888;&lt;/h1&gt;</code>
+          <small>No script needed &mdash; injects visible HTML content.</small>
+        </button>
+
+      </div>
+    </section>
+
+    <!-- Vulnerable code walkthrough -->
+    <section class="card glass">
+      <h2>&#128203; Vulnerable Code Path</h2>
+<pre class="codeblock"><span class="c">// Route: GET /vulnerable?q=…</span>
+app.get(<span class="s">"/vulnerable"</span>, (req, res) => {
+  <span class="k">const</span> q = req.query.q;
+
+  <span class="c">// ⚠ FLAW — raw concatenation, no encoding</span>
+  result = <span class="s">"You searched for: "</span> + q;
+
+  res.send(page.replace(<span class="s">"{{RESULT}}"</span>, result));
+});</pre>
+      <div class="cause-box">
+        <strong>Root cause:</strong> The query-string value <code>q</code> is concatenated
+        directly into the HTML response. The browser cannot distinguish the injected
+        markup from the real page, so any <code>&lt;script&gt;</code> tag or event-handler
+        attribute executes with the privileges of the current origin.
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>Reflected XSS Lab &mdash; local demo</p>
+  </footer>
+
+  <script>
+    function fill(card) {
+      var c   = card.querySelector("code");
+      var inp = document.getElementById("q");
+      inp.value = c.textContent;
+      inp.focus();
+      card.classList.add("flash");
+      setTimeout(function () { card.classList.remove("flash"); }, 600);
+    }
+  </script>
+
+</body>
+</html>

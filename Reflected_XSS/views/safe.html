@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Mitigated — Reflected XSS Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="mode-safe">
+
+  <nav class="navbar">
+    <a href="/" class="nav-brand">
+      <span class="brand-icon">&#9741;</span>
+      <span>XSS Lab</span>
+    </a>
+    <div class="nav-links">
+      <a href="/"           class="nav-link">Home</a>
+      <a href="/vulnerable" class="nav-link"><span class="dot dot-red"></span>Vulnerable</a>
+      <a href="/safe"        class="nav-link active"><span class="dot dot-green"></span>Mitigated</a>
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- Banner -->
+    <div class="page-banner banner-safe">
+      <span class="status-pill pill-green">&#128274; MITIGATED MODE</span>
+      <p>User input is <strong>HTML-encoded</strong> before rendering &mdash; payloads appear as harmless text.</p>
+    </div>
+
+    <!-- Search -->
+    <section class="card glass">
+      <h2>&#128269; Search</h2>
+      <form action="/safe" method="GET" class="search-form">
+        <input id="q" type="text" name="q"
+               placeholder="Try the same XSS payloads here…"
+               autocomplete="off" spellcheck="false">
+        <button type="submit" class="btn-safe">Search</button>
+      </form>
+      {{RESULT}}
+    </section>
+
+    <!-- Payload gallery -->
+    <section class="card glass">
+      <h2>&#129514; Try the Same Payloads <span class="hint">now safely encoded</span></h2>
+      <div class="payload-grid">
+
+        <button class="pcard" onclick="fill(this)" type="button">
+          <strong>Basic Alert</strong>
+          <code>&lt;script&gt;alert('XSS')&lt;/script&gt;</code>
+          <small>Rendered as text &mdash; no alert fires.</small>
+        </button>
+
+        <button class="pcard" onclick="fill(this)" type="button">
+          <strong>Cookie Theft</strong>
+          <code>&lt;script&gt;alert(document.cookie)&lt;/script&gt;</code>
+          <small>Cookie stays safe &mdash; script is inert text.</small>
+        </button>
+
+        <button class="pcard" onclick="fill(this)" type="button">
+          <strong>Image onerror</strong>
+          <code>&lt;img src=x onerror=alert('XSS')&gt;</code>
+          <small>No image element created &mdash; all encoded.</small>
+        </button>
+
+        <button class="pcard" onclick="fill(this)" type="button">
+          <strong>SVG onload</strong>
+          <code>&lt;svg onload=alert('XSS')&gt;</code>
+          <small>SVG tag neutralised &mdash; appears as literal text.</small>
+        </button>
+
+      </div>
+    </section>
+
+    <!-- Mitigated code walkthrough -->
+    <section class="card glass">
+      <h2>&#128203; Mitigated Code Path</h2>
+<pre class="codeblock"><span class="c">// HTML-escape helper (context-aware output encoding)</span>
+<span class="k">function</span> escapeHtml(str) {
+  <span class="k">return</span> String(str)
+    .replace(<span class="s">/&amp;/g</span>,  <span class="s">"&amp;amp;"</span>)
+    .replace(<span class="s">/&lt;/g</span>,  <span class="s">"&amp;lt;"</span>)
+    .replace(<span class="s">/&gt;/g</span>,  <span class="s">"&amp;gt;"</span>)
+    .replace(<span class="s">/"/g</span>,   <span class="s">"&amp;quot;"</span>)
+    .replace(<span class="s">/'/g</span>,   <span class="s">"&amp;#39;"</span>);
+}
+
+<span class="c">// Route: GET /safe?q=…</span>
+app.get(<span class="s">"/safe"</span>, (req, res) => {
+  <span class="k">const</span> q = req.query.q;
+
+  <span class="c">// ✅ FIX — output encoded before insertion</span>
+  result = <span class="s">"You searched for: "</span> + escapeHtml(q);
+
+  res.send(page.replace(<span class="s">"{{RESULT}}"</span>, result));
+});</pre>
+      <div class="fix-box">
+        <strong>Mitigation applied:</strong> Every special character
+        (<code>&lt;</code>, <code>&gt;</code>, <code>&amp;</code>,
+        <code>&quot;</code>, <code>&#39;</code>) is replaced with its
+        HTML entity <em>before</em> insertion into the page. The browser
+        renders the characters visually but never interprets them as
+        markup or script.
+      </div>
+    </section>
+
+
+
+  </main>
+
+  <footer class="site-footer">
+    <p>Reflected XSS Lab &mdash; local demo</p>
+  </footer>
+
+  <script>
+    function fill(card) {
+      var c   = card.querySelector("code");
+      var inp = document.getElementById("q");
+      inp.value = c.textContent;
+      inp.focus();
+      card.classList.add("flash");
+      setTimeout(function () { card.classList.remove("flash"); }, 600);
+    }
+  </script>
+
+</body>
+</html>
