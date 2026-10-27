@@ -1,0 +1,7 @@
+{
+  "name": "csrf-variant-1-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local educational demonstration of GET-based CSRF and its mitigation",
+  "scripts": { "start": "node server.js" }
+}
