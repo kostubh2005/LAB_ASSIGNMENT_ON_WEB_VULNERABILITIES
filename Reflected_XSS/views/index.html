@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Reflected XSS Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="mode-home">
+
+  <nav class="navbar">
+    <a href="/" class="nav-brand">
+      <span class="brand-icon">&#9741;</span>
+      <span>XSS Lab</span>
+    </a>
+    <div class="nav-links">
+      <a href="/"           class="nav-link active">Home</a>
+      <a href="/vulnerable" class="nav-link"><span class="dot dot-red"></span>Vulnerable</a>
+      <a href="/safe"        class="nav-link"><span class="dot dot-green"></span>Mitigated</a>
+    </div>
+  </nav>
+
+  <main>
+    <section class="hero">
+      <div class="hero-glow"></div>
+      <h1 class="hero-title">Reflected <span class="accent">XSS</span> Lab</h1>
+      <p class="hero-sub">Exploit a real vulnerability, then defend against it — all in your browser.</p>
+
+      <div class="mode-cards">
+        <a href="/vulnerable" class="mcard mcard-vuln">
+          <span class="mcard-icon">&#9888;</span>
+          <h2>Vulnerable Mode</h2>
+          <p>User input is reflected into the page without any encoding. Injected scripts execute freely.</p>
+          <span class="mcard-tag tag-red">EXPLOIT</span>
+        </a>
+        <a href="/safe" class="mcard mcard-safe">
+          <span class="mcard-icon">&#128274;</span>
+          <h2>Mitigated Mode</h2>
+          <p>HTML output encoding neutralises every payload. The same attack is rendered harmless.</p>
+          <span class="mcard-tag tag-green">DEFENDED</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="info-grid">
+      <article class="info-card">
+        <h3><span class="ic-icon">&#127919;</span> What is Reflected XSS?</h3>
+        <p>The server takes user input from the URL and echoes it straight back into the HTML response.
+           If the input contains <code>&lt;script&gt;</code> tags or event-handler attributes, the
+           browser treats them as real code and executes them in the victim&rsquo;s session.</p>
+      </article>
+      <article class="info-card">
+        <h3><span class="ic-icon">&#9889;</span> Root Cause</h3>
+        <p>User input is concatenated directly into the HTML string &mdash;
+           <code>result&nbsp;=&nbsp;"You searched for:&nbsp;"&nbsp;+&nbsp;q</code> &mdash;
+           with no output encoding, so any injected markup is interpreted by the browser.</p>
+      </article>
+      <article class="info-card">
+        <h3><span class="ic-icon">&#127850;</span> Demo Cookie</h3>
+        <p>A cookie <code>session_id=user_abc123_secret_token</code> has been set
+           <strong>without</strong> the <code>HttpOnly</code> flag, so
+           <code>document.cookie</code> can read it &mdash; exactly what a cookie-stealing XSS
+           payload exploits.</p>
+      </article>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Reflected XSS Lab &mdash; local demo</p>
+  </footer>
+
+</body>
+</html>
