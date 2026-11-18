@@ -43,7 +43,7 @@ The selected primary mitigation is **avoiding state-changing GET requests**: sec
 
 | Member name | Roll number | Category | Variant implemented |
 |---|---|---|---|
-| [Your name] | [Your roll number] | CSRF | Variant 1 — GET-based forged action |
+| Tanish Sabne | IIB2024035 | CSRF | Variant 1 — GET-based forged action |
 
 Fill in your actual details before submission. The assignment asks the group to map each variant to its individual owner.
 
